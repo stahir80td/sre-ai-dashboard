@@ -72,11 +72,11 @@ wheels/
 *.egg
 
 # ML/Data files
-*.pkl
+#*.pkl
 *.joblib
 *.h5
 *.hdf5
-models/*.pkl
+#models/*.pkl
 training_data*.csv
 *.ipynb_checkpoints
 
