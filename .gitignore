@@ -107,7 +107,7 @@ Desktop.ini
 # pnpm-lock.yaml
 
 # Lock files (optional - some teams prefer to commit these)
-package-lock.json
+#package-lock.json
 yarn.lock
 pnpm-lock.yaml
 
