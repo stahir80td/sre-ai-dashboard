@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Activity, AlertTriangle, Server, Zap, Brain, AlertCircle, Play, Pause, RotateCcw, Route, CheckCircle, XCircle, ChevronRight, RefreshCw, Cpu } from 'lucide-react';
+import { Activity, AlertTriangle, Server, Zap, Brain, AlertCircle, Play, Pause, RotateCcw, Route, CheckCircle, XCircle, ChevronRight, RefreshCw, Cpu, Menu, X } from 'lucide-react';
 
 // API base URL - uses relative paths in production
 const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:8080' : '';
@@ -64,6 +64,8 @@ function Dashboard() {
   });
   const [isConnecting, setIsConnecting] = useState(false);
   const [backendError, setBackendError] = useState<string | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'topology' | 'metrics' | 'predictions'>('metrics');
   
   const wsRef = useRef<WebSocket | null>(null);
   const servicesIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -370,46 +372,105 @@ function Dashboard() {
 
   const systemHealth = getSystemHealth();
 
+  // Mobile Tab Navigation
+  const MobileTabNav = () => (
+    <div className="lg:hidden flex justify-around bg-slate-800 rounded-lg p-2 mb-4">
+      <button
+        onClick={() => setActiveTab('topology')}
+        className={`flex-1 py-2 px-3 rounded transition-colors ${
+          activeTab === 'topology' ? 'bg-blue-600 text-white' : 'text-slate-400'
+        }`}
+      >
+        Topology
+      </button>
+      <button
+        onClick={() => setActiveTab('metrics')}
+        className={`flex-1 py-2 px-3 rounded transition-colors ${
+          activeTab === 'metrics' ? 'bg-blue-600 text-white' : 'text-slate-400'
+        }`}
+      >
+        Metrics
+      </button>
+      <button
+        onClick={() => setActiveTab('predictions')}
+        className={`flex-1 py-2 px-3 rounded transition-colors ${
+          activeTab === 'predictions' ? 'bg-blue-600 text-white' : 'text-slate-400'
+        }`}
+      >
+        AI
+      </button>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-slate-900 text-white p-4">
+    <div className="min-h-screen bg-slate-900 text-white p-2 sm:p-4">
       {/* Header with Navigation */}
       <div className="mb-4 border-b border-slate-700 pb-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <Brain className="w-8 h-8 text-blue-500" />
-            <h1 className="text-2xl font-bold">AI-Powered SRE Dashboard</h1>
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <Brain className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500" />
+            <h1 className="text-lg sm:text-2xl font-bold">AI-Powered SRE</h1>
           </div>
           
-          <div className="flex items-center gap-4">
-            {/* Navigation Button to Architecture Page */}
+          <div className="flex items-center gap-2 sm:gap-4">
+            {/* Mobile Menu Toggle */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden p-2 rounded-lg bg-slate-800 hover:bg-slate-700"
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+            
+            {/* Desktop Navigation */}
+            <div className="hidden lg:flex items-center gap-4">
+              <button
+                onClick={() => window.location.href = '/architecture'}
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-600 to-purple-600 text-white font-semibold rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-200"
+              >
+                <Cpu className="w-5 h-5" />
+                <span>View Architecture</span>
+              </button>
+              
+              {/* WebSocket Connection Status */}
+              <div className={`flex items-center space-x-2 px-3 py-1 rounded-full ${
+                wsConnected ? 'bg-green-900/50' : 'bg-slate-800'
+              }`}>
+                <Activity className={`w-4 h-4 ${wsConnected ? 'text-green-400 animate-pulse' : 'text-slate-400'}`} />
+                <span className="text-sm hidden sm:inline">{wsConnected ? 'Connected' : 'Not Connected'}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Mobile Menu Dropdown */}
+        {mobileMenuOpen && (
+          <div className="lg:hidden mt-4 space-y-2">
             <button
               onClick={() => window.location.href = '/architecture'}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-600 to-purple-600 text-white font-semibold rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-200"
+              className="w-full flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-600 to-purple-600 text-white font-semibold rounded-lg"
             >
               <Cpu className="w-5 h-5" />
               <span>View Architecture</span>
             </button>
-            
-            {/* WebSocket Connection Status */}
-            <div className={`flex items-center space-x-2 px-3 py-1 rounded-full ${
+            <div className={`flex items-center justify-center space-x-2 px-3 py-2 rounded-full ${
               wsConnected ? 'bg-green-900/50' : 'bg-slate-800'
             }`}>
               <Activity className={`w-4 h-4 ${wsConnected ? 'text-green-400 animate-pulse' : 'text-slate-400'}`} />
-              <span className="text-sm">{wsConnected ? 'Connected' : 'Not Connected'}</span>
+              <span className="text-sm">{wsConnected ? 'WebSocket Connected' : 'WebSocket Not Connected'}</span>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* System Health Banner */}
-      <div className={`rounded-lg p-4 mb-4 border-2 ${
+      <div className={`rounded-lg p-3 sm:p-4 mb-4 border-2 ${
         systemHealth.status === 'Critical' ? 'bg-red-900/50 border-red-600' :
         systemHealth.status === 'At Risk' ? 'bg-orange-900/50 border-orange-600' :
         systemHealth.status === 'Degraded' ? 'bg-yellow-900/50 border-yellow-600' :
         systemHealth.status === 'Unknown' ? 'bg-slate-700/50 border-slate-600' :
         'bg-green-900/50 border-green-600'
       }`}>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center space-x-3">
             {systemHealth.status === 'Critical' || systemHealth.status === 'At Risk' ? 
               <AlertTriangle className="w-6 h-6 text-orange-400" /> :
@@ -418,27 +479,29 @@ function Dashboard() {
               <CheckCircle className="w-6 h-6 text-green-400" />
             }
             <div>
-              <h2 className="text-xl font-bold">System Status: {systemHealth.status}</h2>
-              <p className="text-sm opacity-75">
-                {systemHealth.healthy} of {systemHealth.total} services healthy
+              <h2 className="text-lg sm:text-xl font-bold">System: {systemHealth.status}</h2>
+              <p className="text-xs sm:text-sm opacity-75">
+                {systemHealth.healthy}/{systemHealth.total} services healthy
               </p>
             </div>
           </div>
-          <div className="flex items-center space-x-8">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-400">{systemHealth.healthy}</div>
-              <div className="text-xs">Healthy</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-yellow-400">{systemHealth.degraded}</div>
-              <div className="text-xs">Degraded</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-red-400">{systemHealth.down}</div>
-              <div className="text-xs">Down</div>
+          <div className="flex items-center justify-between sm:space-x-4">
+            <div className="flex space-x-4 sm:space-x-8">
+              <div className="text-center">
+                <div className="text-xl sm:text-2xl font-bold text-green-400">{systemHealth.healthy}</div>
+                <div className="text-xs">Healthy</div>
+              </div>
+              <div className="text-center">
+                <div className="text-xl sm:text-2xl font-bold text-yellow-400">{systemHealth.degraded}</div>
+                <div className="text-xs">Degraded</div>
+              </div>
+              <div className="text-center">
+                <div className="text-xl sm:text-2xl font-bold text-red-400">{systemHealth.down}</div>
+                <div className="text-xs">Down</div>
+              </div>
             </div>
             <div className="text-right">
-              <div className="text-3xl font-bold">
+              <div className="text-2xl sm:text-3xl font-bold">
                 {systemPrediction ? (systemPrediction.incident_probability * 100).toFixed(1) : '0.0'}%
               </div>
               <div className="text-xs">System Risk</div>
@@ -447,13 +510,17 @@ function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-12 gap-4">
+      {/* Mobile Tab Navigation */}
+      <MobileTabNav />
+
+      {/* Main Content Grid - Responsive */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         {/* Left Panel - Service Topology & Controls */}
-        <div className="col-span-4 space-y-4">
+        <div className={`lg:col-span-4 space-y-4 ${activeTab === 'topology' ? 'block lg:block' : 'hidden lg:block'}`}>
           {/* Service Architecture */}
-          <div className="bg-slate-800 rounded-lg p-4">
-            <h3 className="text-lg font-semibold mb-4">Service Architecture</h3>
-            <div className="relative h-64">
+          <div className="bg-slate-800 rounded-lg p-3 sm:p-4">
+            <h3 className="text-base sm:text-lg font-semibold mb-4">Service Architecture</h3>
+            <div className="relative h-48 sm:h-64">
               <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 300">
                 {/* Connection lines */}
                 <line x1="200" y1="50" x2="100" y2="120" stroke="currentColor" strokeWidth="2" className="text-slate-600" />
@@ -483,49 +550,49 @@ function Dashboard() {
               {/* Service Nodes */}
               <div 
                 onClick={() => setSelectedService('api-gateway')}
-                className={`absolute top-4 left-1/2 -translate-x-1/2 cursor-pointer border-2 rounded-lg px-3 py-2 transition-all hover:scale-105 ${getStatusColor(services['api-gateway']?.status || 'healthy')}`}
+                className={`absolute top-4 left-1/2 -translate-x-1/2 cursor-pointer border-2 rounded-lg px-2 sm:px-3 py-1 sm:py-2 transition-all hover:scale-105 ${getStatusColor(services['api-gateway']?.status || 'healthy')}`}
               >
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-1 sm:space-x-2">
                   {getStatusIcon(services['api-gateway']?.status || 'healthy')}
-                  <span className="text-sm font-medium">API Gateway</span>
+                  <span className="text-xs sm:text-sm font-medium">API Gateway</span>
                 </div>
               </div>
 
               <div 
                 onClick={() => setSelectedService('auth-service')}
-                className={`absolute top-24 left-12 cursor-pointer border-2 rounded-lg px-3 py-2 transition-all hover:scale-105 ${getStatusColor(services['auth-service']?.status || 'healthy')}`}
+                className={`absolute top-24 left-8 sm:left-12 cursor-pointer border-2 rounded-lg px-2 sm:px-3 py-1 sm:py-2 transition-all hover:scale-105 ${getStatusColor(services['auth-service']?.status || 'healthy')}`}
               >
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-1 sm:space-x-2">
                   {getStatusIcon(services['auth-service']?.status || 'healthy')}
-                  <span className="text-sm font-medium">Auth Service</span>
+                  <span className="text-xs sm:text-sm font-medium">Auth Service</span>
                 </div>
               </div>
 
               <div 
                 onClick={() => setSelectedService('user-service')}
-                className={`absolute top-24 right-12 cursor-pointer border-2 rounded-lg px-3 py-2 transition-all hover:scale-105 ${getStatusColor(services['user-service']?.status || 'healthy')}`}
+                className={`absolute top-24 right-8 sm:right-12 cursor-pointer border-2 rounded-lg px-2 sm:px-3 py-1 sm:py-2 transition-all hover:scale-105 ${getStatusColor(services['user-service']?.status || 'healthy')}`}
               >
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-1 sm:space-x-2">
                   {getStatusIcon(services['user-service']?.status || 'healthy')}
-                  <span className="text-sm font-medium">User Service</span>
+                  <span className="text-xs sm:text-sm font-medium">User Service</span>
                 </div>
               </div>
 
               <div 
                 onClick={() => setSelectedService('database')}
-                className={`absolute bottom-8 left-1/2 -translate-x-1/2 cursor-pointer border-2 rounded-lg px-3 py-2 transition-all hover:scale-105 ${getStatusColor(services['database']?.status || 'healthy')}`}
+                className={`absolute bottom-8 left-1/2 -translate-x-1/2 cursor-pointer border-2 rounded-lg px-2 sm:px-3 py-1 sm:py-2 transition-all hover:scale-105 ${getStatusColor(services['database']?.status || 'healthy')}`}
               >
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-1 sm:space-x-2">
                   {getStatusIcon(services['database']?.status || 'healthy')}
-                  <span className="text-sm font-medium">Database</span>
+                  <span className="text-xs sm:text-sm font-medium">Database</span>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Chaos Engineering & Simulation Controls */}
-          <div className="bg-slate-800 rounded-lg p-4">
-            <h3 className="text-lg font-semibold mb-4">Chaos Engineering</h3>
+          <div className="bg-slate-800 rounded-lg p-3 sm:p-4">
+            <h3 className="text-base sm:text-lg font-semibold mb-4">Chaos Engineering</h3>
             
             {/* Simulation Controls */}
             <div className="mb-4 p-3 bg-slate-700 rounded-lg">
@@ -534,7 +601,7 @@ function Dashboard() {
                 {!simulationRunning ? (
                   <button
                     onClick={startSimulation}
-                    className="flex items-center justify-center space-x-1 px-3 py-2 bg-green-600 hover:bg-green-700 rounded text-sm transition-colors"
+                    className="flex items-center justify-center space-x-1 px-3 py-2 bg-green-600 hover:bg-green-700 rounded text-xs sm:text-sm transition-colors"
                   >
                     <Play className="w-4 h-4" />
                     <span>Start</span>
@@ -542,7 +609,7 @@ function Dashboard() {
                 ) : (
                   <button
                     onClick={pauseSimulation}
-                    className="flex items-center justify-center space-x-1 px-3 py-2 bg-yellow-600 hover:bg-yellow-700 rounded text-sm transition-colors"
+                    className="flex items-center justify-center space-x-1 px-3 py-2 bg-yellow-600 hover:bg-yellow-700 rounded text-xs sm:text-sm transition-colors"
                   >
                     <Pause className="w-4 h-4" />
                     <span>Pause</span>
@@ -550,7 +617,7 @@ function Dashboard() {
                 )}
                 <button
                   onClick={resetSimulation}
-                  className="flex items-center justify-center space-x-1 px-3 py-2 bg-slate-600 hover:bg-slate-500 rounded text-sm transition-colors"
+                  className="flex items-center justify-center space-x-1 px-3 py-2 bg-slate-600 hover:bg-slate-500 rounded text-xs sm:text-sm transition-colors"
                 >
                   <RotateCcw className="w-4 h-4" />
                   <span>Reset</span>
@@ -561,9 +628,9 @@ function Dashboard() {
             {/* Chaos Types */}
             <div className="space-y-3">
               <div className="text-xs text-slate-400 mb-2">
-                Select chaos types to inject (impacts should be visible in metrics)
+                Select chaos types to inject
               </div>
-              <div className="flex items-center justify-between">
+              <div className="space-y-2">
                 <label className="flex items-center space-x-2 cursor-pointer">
                   <input 
                     type="checkbox" 
@@ -571,10 +638,8 @@ function Dashboard() {
                     onChange={(e) => setChaosConfig(prev => ({ ...prev, cpu_spike: e.target.checked }))}
                     className="rounded cursor-pointer"
                   />
-                  <span className="text-sm">CPU Spike (70-95%)</span>
+                  <span className="text-xs sm:text-sm">CPU Spike (70-95%)</span>
                 </label>
-              </div>
-              <div className="flex items-center justify-between">
                 <label className="flex items-center space-x-2 cursor-pointer">
                   <input 
                     type="checkbox" 
@@ -582,10 +647,8 @@ function Dashboard() {
                     onChange={(e) => setChaosConfig(prev => ({ ...prev, memory_leak: e.target.checked }))}
                     className="rounded cursor-pointer"
                   />
-                  <span className="text-sm">Memory Leak (+30-50%)</span>
+                  <span className="text-xs sm:text-sm">Memory Leak (+30-50%)</span>
                 </label>
-              </div>
-              <div className="flex items-center justify-between">
                 <label className="flex items-center space-x-2 cursor-pointer">
                   <input 
                     type="checkbox" 
@@ -593,10 +656,8 @@ function Dashboard() {
                     onChange={(e) => setChaosConfig(prev => ({ ...prev, network_latency: e.target.checked }))}
                     className="rounded cursor-pointer"
                   />
-                  <span className="text-sm">Network Latency (+500-2000ms)</span>
+                  <span className="text-xs sm:text-sm">Network Latency (+500-2000ms)</span>
                 </label>
-              </div>
-              <div className="flex items-center justify-between">
                 <label className="flex items-center space-x-2 cursor-pointer">
                   <input 
                     type="checkbox" 
@@ -604,11 +665,11 @@ function Dashboard() {
                     onChange={(e) => setChaosConfig(prev => ({ ...prev, service_kill: e.target.checked }))}
                     className="rounded cursor-pointer"
                   />
-                  <span className="text-sm">Kill Service (Down)</span>
+                  <span className="text-xs sm:text-sm">Kill Service (Down)</span>
                 </label>
               </div>
               <div>
-                <label className="text-sm">Duration: {chaosConfig.duration}s</label>
+                <label className="text-xs sm:text-sm">Duration: {chaosConfig.duration}s</label>
                 <input 
                   type="range" 
                   min="10" 
@@ -621,7 +682,7 @@ function Dashboard() {
               <button 
                 onClick={() => injectMultipleChaos(selectedService)}
                 disabled={!selectedService || Object.values(services).length === 0}
-                className="w-full px-4 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-slate-600 disabled:cursor-not-allowed rounded-lg flex items-center justify-center space-x-2 transition-colors"
+                className="w-full px-3 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-slate-600 disabled:cursor-not-allowed rounded-lg flex items-center justify-center space-x-2 transition-colors text-xs sm:text-sm"
               >
                 <Zap className="w-4 h-4" />
                 <span>Inject Chaos on {selectedService}</span>
@@ -631,9 +692,9 @@ function Dashboard() {
         </div>
 
         {/* Center Panel - Service Metrics */}
-        <div className="col-span-5">
-          <div className="bg-slate-800 rounded-lg p-4">
-            <h3 className="text-lg font-semibold mb-4">Service Metrics</h3>
+        <div className={`lg:col-span-5 ${activeTab === 'metrics' ? 'block lg:block' : 'hidden lg:block'}`}>
+          <div className="bg-slate-800 rounded-lg p-3 sm:p-4">
+            <h3 className="text-base sm:text-lg font-semibold mb-4">Service Metrics</h3>
             <div className="space-y-3">
               {isConnecting ? (
                 <div className="text-center py-8 text-slate-400">
@@ -688,7 +749,7 @@ function Dashboard() {
                   } ${getStatusColor(service.status)}`}
                 >
                   <div className="flex justify-between items-start mb-2">
-                    <h4 className="font-semibold">{service.name}</h4>
+                    <h4 className="font-semibold text-sm sm:text-base">{service.name}</h4>
                     <span className={`px-2 py-1 rounded text-xs ${
                       service.status === 'healthy' ? 'bg-green-900 text-green-300' :
                       service.status === 'degraded' ? 'bg-yellow-900 text-yellow-300' :
@@ -698,7 +759,7 @@ function Dashboard() {
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="grid grid-cols-2 gap-2 text-xs sm:text-sm">
                     <div>
                       <div className="flex justify-between">
                         <span className="text-slate-400">CPU</span>
@@ -756,10 +817,10 @@ function Dashboard() {
         </div>
 
         {/* Right Panel - Predictions & Events */}
-        <div className="col-span-3 space-y-4">
+        <div className={`lg:col-span-3 space-y-4 ${activeTab === 'predictions' ? 'block lg:block' : 'hidden lg:block'}`}>
           {/* AI Prediction */}
-          <div className="bg-slate-800 rounded-lg p-4">
-            <h3 className="text-lg font-semibold mb-4 flex items-center">
+          <div className="bg-slate-800 rounded-lg p-3 sm:p-4">
+            <h3 className="text-base sm:text-lg font-semibold mb-4 flex items-center">
               <Brain className="w-5 h-5 mr-2 text-purple-400" />
               AI Prediction - {selectedService}
             </h3>
@@ -771,20 +832,20 @@ function Dashboard() {
                   prediction.risk_level === 'medium' ? 'bg-yellow-900/20 text-yellow-400' :
                   'bg-green-900/20 text-green-400'
                 }`}>
-                  <div className="text-2xl font-bold">
+                  <div className="text-xl sm:text-2xl font-bold">
                     {(prediction.incident_probability * 100).toFixed(1)}%
                   </div>
-                  <div className="text-sm">Risk: {prediction.risk_level.toUpperCase()}</div>
+                  <div className="text-xs sm:text-sm">Risk: {prediction.risk_level.toUpperCase()}</div>
                 </div>
 
                 <div className="bg-slate-700/50 rounded-lg p-3">
-                  <div className="text-sm text-slate-400 mb-1">Predicted Incident</div>
-                  <div className="font-medium">{prediction.predicted_incident_type.replace(/_/g, ' ').toUpperCase()}</div>
+                  <div className="text-xs sm:text-sm text-slate-400 mb-1">Predicted Incident</div>
+                  <div className="text-sm sm:text-base font-medium">{prediction.predicted_incident_type.replace(/_/g, ' ').toUpperCase()}</div>
                 </div>
 
                 <div className="bg-blue-900/20 border border-blue-700 rounded-lg p-3">
-                  <div className="text-sm font-medium mb-1">Recommendation</div>
-                  <p className="text-sm">{prediction.recommendation}</p>
+                  <div className="text-xs sm:text-sm font-medium mb-1">Recommendation</div>
+                  <p className="text-xs sm:text-sm">{prediction.recommendation}</p>
                 </div>
 
                 <div className="text-xs text-slate-400">
@@ -800,10 +861,10 @@ function Dashboard() {
           </div>
 
           {/* Event Timeline */}
-          <div className="bg-slate-800 rounded-lg p-4">
-            <h3 className="text-lg font-semibold mb-4">Event Timeline</h3>
+          <div className="bg-slate-800 rounded-lg p-3 sm:p-4">
+            <h3 className="text-base sm:text-lg font-semibold mb-4">Event Timeline</h3>
             <div 
-              className="space-y-2 text-sm max-h-64 overflow-y-auto event-timeline"
+              className="space-y-2 text-xs sm:text-sm max-h-48 sm:max-h-64 overflow-y-auto event-timeline"
               style={{
                 scrollbarWidth: 'thin',
                 scrollbarColor: 'rgba(255, 255, 255, 0.2) rgba(0, 0, 0, 0.2)'
