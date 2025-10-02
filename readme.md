@@ -346,12 +346,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📧 Contact
 
-**Your Name** - [LinkedIn](https://linkedin.com/in/yourprofile) | [GitHub](https://github.com/yourusername)
+**Sohail Tahir** - [LinkedIn](https://www.linkedin.com/in/stahir80/) | [GitHub](https://github.com/stahir80td/sre-ai-dashboard)
 
-Project Link: [https://github.com/yourusername/sre-ai-dashboard](https://github.com/yourusername/sre-ai-dashboard)
+Project Link: [https://github.com/yourusername/sre-ai-dashboard](https://github.com/stahir80td/sre-ai-dashboard)
 
 ---
 
-⭐ **If you find this project useful, please consider giving it a star!**
-
-*Built with ❤️ for the SRE community*
