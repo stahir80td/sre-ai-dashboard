@@ -1,4 +1,4 @@
-# 🚀 AI-Powered SRE Dashboard
+# 🚀 SRE Edge
 
 [![Go](https://img.shields.io/badge/Go-1.21-00ADD8?style=for-the-badge&logo=go)](https://golang.org/)
 [![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react)](https://reactjs.org/)
