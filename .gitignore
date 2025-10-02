@@ -60,7 +60,7 @@ htmlcov/
 .tox/
 
 # Go specific
-go.sum
+#go.sum
 *.test
 *.out
 
